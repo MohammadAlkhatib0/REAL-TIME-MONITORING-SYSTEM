@@ -180,6 +180,9 @@ python test_threat_scorer.py
 # 4. Test statistical anomaly detection (>3 std dev spikes)
 python test_anomaly_detector.py
 
-# 5. Test real-time WebSocket alert pipeline
-python test_step10.py
+# 5. Test real-time WebSocket alert pipeline & ingestion
+python test_websocket_ingest.py
+python test_realtime_pipeline.py
+python test_threat_routes.py
+python test_pfsense_routes.py
 ```
