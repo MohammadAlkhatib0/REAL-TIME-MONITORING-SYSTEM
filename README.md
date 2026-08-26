@@ -161,9 +161,18 @@ npm run dev
 
 ---
 
-## 🧪 Running Automated Tests
+## 🧪 Running Automated Tests & Demonstrations
 
-Run the complete test suite to verify system integrity:
+### 1. Proof Demonstration (For Instructors & Code Review)
+Run the live proof demonstration script to verify that the backend receives an HTTP request, persists it to the PostgreSQL database, and streams it live to the React Dashboard over WebSockets:
+
+```bash
+source venv/bin/activate
+python demo_proof.py
+```
+
+### 2. Full Automated Test Suite
+Run the automated test suite to verify every component of the system:
 
 ```bash
 source venv/bin/activate
