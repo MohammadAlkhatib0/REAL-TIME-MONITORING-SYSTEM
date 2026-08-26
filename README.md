@@ -4,26 +4,21 @@ A state-of-the-art, high-performance, real-time network monitoring and threat in
 
 ---
 
-## 📐 System Architecture & Overview
 
-```
- ┌────────────────┐     ┌──────────────────────┐     ┌────────────────────────┐
- │ Network Logs   │ ──► │  Log Parser Service  │ ──► │ Threat Engine & Scorer │
- │ (pfSense/Auth/ │     │   (log_parser.py)    │     │  (threat_detector.py)  │
- │  HTTP/JSON)    │     └──────────────────────┘     └───────────┬────────────┘
- └────────────────┘                                              │
-                                                                 ▼
- ┌────────────────┐     ┌──────────────────────┐     ┌────────────────────────┐
- │ React Frontend │ ◄── │  WebSocket Manager   │ ◄── │ Statistical Anomaly    │
- │ (Dashboard UI) │     │   (/ws/logs Stream)  │     │   (anomaly_detector.py)│
- └────────────────┘     └──────────────────────┘     └───────────┬────────────┘
-                                                                 │
-                                                                 ▼
-                                                     ┌────────────────────────┐
-                                                     │  PostgreSQL Database   │
-                                                     │ (monitoring_db)        │
-                                                     └────────────────────────┘
-```
+---
+
+## 📋 Core System Capabilities & Feature Overview
+
+- **End-to-End Pipeline**: Diagrammed and implemented real-time data pipeline (Ingestion → Parser → Threat Engine → Core Database → WebSockets → React SPA).
+- **FastAPI & Async Architecture**: Built using FastAPI, Uvicorn, SQLAlchemy Core, Alembic, Pandas, and structured dependencies.
+- **Log Parsing Service**: Implemented `log_parser.py` supporting pfSense firewall logs, System auth logs, Network traffic logs, and custom JSON payloads.
+- **Real-Time WebSockets**: Implemented `WebSocket /ws/logs` with real-time push (`new_log`, `threat_alert`), with HTTP fallback endpoints.
+- **PostgreSQL Database Schema**: Configured PostgreSQL with `logs`, `threat_alerts`, and `blacklisted_ips` tables using pure SQLAlchemy Core.
+- **Rule-Based Threat Detection**: Implemented `threat_detector.py` covering Auth, Network, and Firewall threat vectors.
+- **Weighted Threat Scoring**: Created `threat_scorer.py` algorithm on a 0–100 scale mapped to Low, Medium, High, and Critical severities.
+- **Statistical Anomaly Detection**: Implemented `anomaly_detector.py` tracking rolling mean and standard deviation ($Z > 3.0$).
+- **IP Intelligence & Blacklist Management**: Dedicated CRUD management API and interactive React UI.
+- **pfSense Integration**: Implemented `POST /api/ingest/pfsense` and `GET /api/pfsense/firewall-rules`.
 
 ---
 
