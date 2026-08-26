@@ -9,9 +9,12 @@ A state-of-the-art, high-performance, real-time network monitoring and threat in
 
 ## 📋 Core System Capabilities & Feature Overview
 
-- **End-to-End Pipeline**: Diagrammed and implemented real-time data pipeline (Ingestion → Parser → Threat Engine → Core Database → WebSockets → React SPA).
+- **End-to-End Pipeline**: Real-time data pipeline (Ingestion → Parser → Threat Engine → Core Database → WebSockets → React SPA).
 - **FastAPI & Async Architecture**: Built using FastAPI, Uvicorn, SQLAlchemy Core, Alembic, Pandas, and structured dependencies.
-- **Log Parsing Service**: Implemented `log_parser.py` supporting pfSense firewall logs, System auth logs, Network traffic logs, and custom JSON payloads.
+- **Machine Learning Isolation Forest Engine**: Multivariate AI anomaly detection (`ml_anomaly_detector.py`) analyzing Shannon entropy & payload byte volumes for Zero-Day threat detection.
+- **Enterprise SIEM Integration Exporter**: Export telemetry into ArcSight Common Event Format (CEF), Splunk HTTP Event Collector (HEC), and Elasticsearch Bulk Index formats.
+- **MITRE ATT&CK & NVD CVE Intelligence**: Live mapping of attack signatures to MITRE Tactics, Techniques & Procedures (TTPs) and CVE Identifiers.
+- **Log Parsing Service**: Supports pfSense firewall logs, System auth logs, Network traffic logs, and custom JSON payloads.
 - **Real-Time WebSockets**: Implemented `WebSocket /ws/logs` with real-time push (`new_log`, `threat_alert`), with HTTP fallback endpoints.
 - **PostgreSQL Database Schema**: Configured PostgreSQL with `logs`, `threat_alerts`, and `blacklisted_ips` tables using pure SQLAlchemy Core.
 - **Rule-Based Threat Detection**: Implemented `threat_detector.py` covering Auth, Network, and Firewall threat vectors.

@@ -846,10 +846,36 @@ def simulate_enterprise_attack(payload: Dict[str, Any]):
 
 # GET /api/mitre/matrix
 from .cve_helper import get_mitre_matrix_summary
+from .ml_anomaly_detector import ml_detector
+from .siem_exporter import siem_exporter
 
 @app.get("/api/mitre/matrix")
 def get_mitre_matrix():
     return get_mitre_matrix_summary()
+
+# POST /api/ml/predict
+@app.post("/api/ml/predict")
+def predict_ml_anomaly(payload: Dict[str, Any]):
+    return ml_detector.predict_anomaly(payload)
+
+# GET /api/siem/export
+@app.get("/api/siem/export")
+def export_siem_telemetry(format: str = "cef"):
+    sample_alert = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "source_ip": "193.142.146.210",
+        "threat_type": "SQL_INJECTION",
+        "threat_score": 90.0,
+        "severity": "CRITICAL",
+        "description": "SQL Injection attempt detected from 193.142.146.210"
+    }
+    
+    if format.lower() == "splunk":
+        return siem_exporter.to_splunk_hec(sample_alert)
+    elif format.lower() == "elastic":
+        return siem_exporter.to_elastic_bulk(sample_alert)
+    else:
+        return {"cef_raw": siem_exporter.to_cef(sample_alert)}
 
 # --- WebSocket Endpoints (SQLAlchemy Core) ---
 
