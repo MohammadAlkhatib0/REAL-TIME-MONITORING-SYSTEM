@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Play, Pause, LayoutDashboard, Lock, Globe, FileText } from 'lucide-react';
+import { Shield, Play, Pause, LayoutDashboard, Lock, Globe, FileText, Layers } from 'lucide-react';
 
 export function Header({ isConnected, isPaused, togglePause, activeTab, setActiveTab }) {
   return (
@@ -89,7 +89,26 @@ export function Header({ isConnected, isPaused, togglePause, activeTab, setActiv
             fontSize: '0.85rem'
           }}
         >
-          <FileText size={15} /> SOC Playbooks & Audit
+          <FileText size={15} /> Playbooks & Audit
+        </button>
+
+        <button
+          onClick={() => setActiveTab('cve-matrix')}
+          style={{
+            padding: '0.45rem 0.8rem',
+            borderRadius: '6px',
+            border: 'none',
+            background: activeTab === 'cve-matrix' ? '#f59e0b' : 'transparent',
+            color: activeTab === 'cve-matrix' ? '#ffffff' : '#94a3b8',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontSize: '0.85rem'
+          }}
+        >
+          <Layers size={15} /> MITRE & CVE Matrix
         </button>
       </div>
 

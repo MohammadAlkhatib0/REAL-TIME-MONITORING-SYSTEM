@@ -8,6 +8,7 @@ import { Charts } from './components/Charts';
 import { IPIntelligence } from './components/IPIntelligence';
 import { GeoThreatMap } from './components/GeoThreatMap';
 import { IncidentPlaybooks } from './components/IncidentPlaybooks';
+import { CveMitreMatrix } from './components/CveMitreMatrix';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -48,6 +49,7 @@ export default function App() {
       {activeTab === 'geo-map' && <GeoThreatMap />}
       {activeTab === 'ip-intelligence' && <IPIntelligence />}
       {activeTab === 'playbooks' && <IncidentPlaybooks />}
+      {activeTab === 'cve-matrix' && <CveMitreMatrix />}
     </div>
   );
 }

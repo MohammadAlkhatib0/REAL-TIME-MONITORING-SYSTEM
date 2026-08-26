@@ -844,6 +844,13 @@ def simulate_enterprise_attack(payload: Dict[str, Any]):
         "message": f"Successfully injected {injected} high-volume enterprise attack logs into real-time threat engine"
     }
 
+# GET /api/mitre/matrix
+from .cve_helper import get_mitre_matrix_summary
+
+@app.get("/api/mitre/matrix")
+def get_mitre_matrix():
+    return get_mitre_matrix_summary()
+
 # --- WebSocket Endpoints (SQLAlchemy Core) ---
 
 @app.websocket("/ws/logs")
