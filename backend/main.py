@@ -1,9 +1,12 @@
 import asyncio
 import time
+import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Union, Dict, Any
 from fastapi import FastAPI, Depends, WebSocket, WebSocketDisconnect, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy import select, insert, update, func, and_
 from sqlalchemy.engine import Connection
 
@@ -30,6 +33,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount Frontend Static Assets & Serve React Single-Page Application
+frontend_dist_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "dist")
+
+if os.path.exists(os.path.join(frontend_dist_dir, "assets")):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist_dir, "assets")), name="assets")
 
 # Global memory counters for throughput calculation
 window_log_count = 0
@@ -91,6 +100,9 @@ async def broadcast_metrics_loop():
 
 @app.get("/")
 def read_root():
+    index_path = os.path.join(frontend_dist_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     return {"status": "online", "system": "Real-Time Network Monitoring & Threat Detection System (SQLAlchemy Core)"}
 
 # Real-time Monitoring Endpoint: POST /api/ingest/log
