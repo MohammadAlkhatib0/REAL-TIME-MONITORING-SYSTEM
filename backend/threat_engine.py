@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from datetime import datetime
 from typing import List, Optional
 from .schemas import LogCreate, AlertCreate
-from anomaly_detector import StatisticalAnomalyDetector
+from .anomaly_detector import StatisticalAnomalyDetector
 
 class ThreatDetectionEngine:
     def __init__(self):

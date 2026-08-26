@@ -14,11 +14,11 @@ from .database import get_db, init_db, engine
 from .models import logs_table, threat_alerts_table, metrics_snapshots_table
 from .schemas import LogCreate
 from .parser import LogParser
-from log_parser import LogParser as StandaloneLogParser
+from .log_parser import LogParser as StandaloneLogParser
 from .threat_engine import threat_engine
 from .websocket_manager import manager
-from threat_scorer import ThreatScorer
-from threat_detector import DEFAULT_BLACKLISTED_IPS
+from .threat_scorer import ThreatScorer
+from .threat_detector import DEFAULT_BLACKLISTED_IPS
 
 app = FastAPI(
     title="Real-Time Network Monitoring & Threat Detection API (SQLAlchemy Core)",

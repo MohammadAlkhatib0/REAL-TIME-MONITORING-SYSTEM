@@ -2,7 +2,7 @@ import time
 from collections import defaultdict, deque
 from typing import List, Dict, Any, Union
 
-from threat_scorer import ThreatScorer
+from .threat_scorer import ThreatScorer
 
 # Known Threat Intelligence Blacklisted IPs
 DEFAULT_BLACKLISTED_IPS = {

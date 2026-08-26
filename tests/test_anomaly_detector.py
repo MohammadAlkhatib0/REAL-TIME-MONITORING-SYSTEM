@@ -1,6 +1,10 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import time
 import unittest
-from anomaly_detector import StatisticalAnomalyDetector
+from backend.anomaly_detector import StatisticalAnomalyDetector
 
 class TestStatisticalAnomalyDetector(unittest.TestCase):
     def test_calculate_stats_math(self):

@@ -1,5 +1,9 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import unittest
-from threat_scorer import ThreatScorer
+from backend.threat_scorer import ThreatScorer
 
 class TestThreatScorer(unittest.TestCase):
     def test_low_severity_scores(self):
