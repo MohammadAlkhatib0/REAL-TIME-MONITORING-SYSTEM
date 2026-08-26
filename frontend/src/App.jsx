@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWebSocket } from './hooks/useWebSocket';
 import { Header } from './components/Header';
 import { MetricsCards } from './components/MetricsCards';
 import { AlertFeed } from './components/AlertFeed';
 import { LogTable } from './components/LogTable';
 import { Charts } from './components/Charts';
+import { IPIntelligence } from './components/IPIntelligence';
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+
   const {
     isConnected,
     isPaused,
@@ -25,16 +28,22 @@ export default function App() {
         isPaused={isPaused}
         togglePause={togglePause}
         logCount={logs.length}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
 
-      <MetricsCards metrics={metrics} totalLogs={logs.length} />
-
-      <Charts metricsHistory={metricsHistory} logs={logs} />
-
-      <div className="dashboard-grid">
-        <LogTable logs={logs} />
-        <AlertFeed alerts={alerts} acknowledgeAlert={acknowledgeAlert} />
-      </div>
+      {activeTab === 'dashboard' ? (
+        <>
+          <MetricsCards metrics={metrics} totalLogs={logs.length} />
+          <Charts metricsHistory={metricsHistory} logs={logs} />
+          <div className="dashboard-grid">
+            <LogTable logs={logs} />
+            <AlertFeed alerts={alerts} acknowledgeAlert={acknowledgeAlert} />
+          </div>
+        </>
+      ) : (
+        <IPIntelligence />
+      )}
     </div>
   );
 }

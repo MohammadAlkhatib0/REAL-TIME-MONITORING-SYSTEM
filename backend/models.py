@@ -52,3 +52,13 @@ metrics_snapshots_table = Table(
     Column("active_alerts_count", Integer, nullable=False, default=0),
     Column("bandwidth_kbps", Float, nullable=False, default=0.0)
 )
+
+blacklisted_ips_table = Table(
+    "blacklisted_ips",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("ip_address", String(45), nullable=False, unique=True, index=True),
+    Column("danger_level", String(20), nullable=False, default="HIGH", index=True),
+    Column("reason", Text, nullable=True),
+    Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False)
+)

@@ -11,7 +11,7 @@ from sqlalchemy import select, insert, update, func, and_
 from sqlalchemy.engine import Connection
 
 from .database import get_db, init_db, engine
-from .models import logs_table, threat_alerts_table, metrics_snapshots_table
+from .models import logs_table, threat_alerts_table, metrics_snapshots_table, blacklisted_ips_table
 from .schemas import LogCreate
 from .parser import LogParser
 from .log_parser import LogParser as StandaloneLogParser
@@ -49,6 +49,28 @@ custom_blacklisted_ips = set(DEFAULT_BLACKLISTED_IPS)
 @app.on_event("startup")
 def on_startup():
     init_db()
+    try:
+        with engine.connect() as conn:
+            # Seed default blacklisted IPs if table empty
+            count_stmt = select(func.count()).select_from(blacklisted_ips_table)
+            count = conn.execute(count_stmt).scalar() or 0
+            if count == 0:
+                defaults = [
+                    {"ip_address": "45.33.32.156", "danger_level": "CRITICAL", "reason": "Known Threat Intelligence Feed - Malicious Scanner"},
+                    {"ip_address": "185.220.101.5", "danger_level": "CRITICAL", "reason": "Tor Exit Node - High Risk Intrusion Attempt"},
+                    {"ip_address": "193.142.146.210", "danger_level": "HIGH", "reason": "SQL Injection & Vulnerability Probe Source"},
+                    {"ip_address": "103.251.167.20", "danger_level": "HIGH", "reason": "Brute Force Authentication Attacker"}
+                ]
+                for item in defaults:
+                    conn.execute(insert(blacklisted_ips_table).values(**item))
+                conn.commit()
+
+            rows = conn.execute(select(blacklisted_ips_table.c.ip_address)).all()
+            for ip_row in rows:
+                custom_blacklisted_ips.add(ip_row[0])
+    except Exception:
+        pass
+
     asyncio.create_task(broadcast_metrics_loop())
 
 async def broadcast_metrics_loop():
@@ -491,6 +513,95 @@ def get_top_threat_sources(limit: int = Query(10, le=100), conn: Connection = De
 
 # --- IP Intelligence Endpoints (SQLAlchemy Core) ---
 
+# GET /api/ip/blacklist
+@app.get("/api/ip/blacklist")
+def get_blacklisted_ips(conn: Connection = Depends(get_db)):
+    stmt = select(blacklisted_ips_table).order_by(blacklisted_ips_table.c.created_at.desc())
+    rows = conn.execute(stmt).mappings().all()
+
+    result = []
+    for r in rows:
+        ip = r["ip_address"]
+        threat_cnt_stmt = select(func.count()).select_from(threat_alerts_table).where(threat_alerts_table.c.source_ip == ip)
+        threat_count = conn.execute(threat_cnt_stmt).scalar() or 0
+
+        created_at = r.get("created_at")
+        result.append({
+            "id": r["id"],
+            "ip_address": ip,
+            "danger_level": r.get("danger_level", "HIGH"),
+            "reason": r.get("reason", "Security Violation"),
+            "created_at": created_at.isoformat() if isinstance(created_at, datetime) else str(created_at),
+            "threat_count": threat_count
+        })
+    return result
+
+# POST /api/ip/blacklist (Block IP)
+@app.post("/api/ip/blacklist")
+def blacklist_ip(payload: Dict[str, Any], conn: Connection = Depends(get_db)):
+    ip = payload.get("ip_address", payload.get("ip"))
+    danger_level = str(payload.get("danger_level", "HIGH")).upper()
+    reason = payload.get("reason", "Manual Administrative Block")
+
+    if not ip:
+        raise HTTPException(status_code=400, detail="Missing ip_address in request body")
+
+    if danger_level not in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]:
+        danger_level = "HIGH"
+
+    custom_blacklisted_ips.add(ip)
+
+    check_stmt = select(blacklisted_ips_table).where(blacklisted_ips_table.c.ip_address == ip)
+    existing = conn.execute(check_stmt).mappings().first()
+
+    if existing:
+        update_stmt = update(blacklisted_ips_table).where(blacklisted_ips_table.c.ip_address == ip).values(
+            danger_level=danger_level,
+            reason=reason
+        )
+        conn.execute(update_stmt)
+    else:
+        insert_stmt = insert(blacklisted_ips_table).values(
+            ip_address=ip,
+            danger_level=danger_level,
+            reason=reason
+        )
+        conn.execute(insert_stmt)
+
+    conn.commit()
+
+    return {
+        "status": "success",
+        "message": f"IP {ip} successfully added to blacklist with danger level {danger_level}",
+        "blacklisted_ip": ip,
+        "danger_level": danger_level,
+        "reason": reason
+    }
+
+# POST /api/ip/unblacklist & DELETE /api/ip/blacklist/{ip_address} (Unblock IP)
+@app.post("/api/ip/unblacklist")
+@app.delete("/api/ip/blacklist/{ip_address:path}")
+def unblacklist_ip(ip_address: Optional[str] = None, payload: Optional[Dict[str, Any]] = None, conn: Connection = Depends(get_db)):
+    target_ip = ip_address
+    if not target_ip and payload:
+        target_ip = payload.get("ip_address", payload.get("ip"))
+
+    if not target_ip:
+        raise HTTPException(status_code=400, detail="Missing ip_address")
+
+    if target_ip in custom_blacklisted_ips:
+        custom_blacklisted_ips.remove(target_ip)
+
+    del_stmt = blacklisted_ips_table.delete().where(blacklisted_ips_table.c.ip_address == target_ip)
+    conn.execute(del_stmt)
+    conn.commit()
+
+    return {
+        "status": "success",
+        "message": f"IP {target_ip} successfully unblocked and removed from blacklist",
+        "unblocked_ip": target_ip
+    }
+
 # GET /api/ip/{ip_address}/info
 @app.get("/api/ip/{ip_address}/info")
 def get_ip_info(ip_address: str, conn: Connection = Depends(get_db)):
@@ -505,7 +616,9 @@ def get_ip_info(ip_address: str, conn: Connection = Depends(get_db)):
         sev = a["severity"]
         severity_breakdown[sev] = severity_breakdown.get(sev, 0) + 1
 
-    is_blacklisted = ip_address in custom_blacklisted_ips
+    bl_stmt = select(blacklisted_ips_table).where(blacklisted_ips_table.c.ip_address == ip_address)
+    bl_record = conn.execute(bl_stmt).mappings().first()
+    is_blacklisted = ip_address in custom_blacklisted_ips or bool(bl_record)
 
     recent_alerts = []
     for a in alerts[:5]:
@@ -521,25 +634,12 @@ def get_ip_info(ip_address: str, conn: Connection = Depends(get_db)):
     return {
         "ip_address": ip_address,
         "is_blacklisted": is_blacklisted,
+        "danger_level": bl_record["danger_level"] if bl_record else ("HIGH" if is_blacklisted else "LOW"),
+        "reason": bl_record["reason"] if bl_record else None,
         "total_logs": total_logs,
         "total_alerts": len(alerts),
         "severity_breakdown": severity_breakdown,
         "recent_alerts": recent_alerts
-    }
-
-# POST /api/ip/blacklist
-@app.post("/api/ip/blacklist")
-def blacklist_ip(payload: Dict[str, Any]):
-    ip = payload.get("ip_address", payload.get("ip"))
-    if not ip:
-        raise HTTPException(status_code=400, detail="Missing ip_address in request body")
-
-    custom_blacklisted_ips.add(ip)
-    return {
-        "status": "success",
-        "message": f"IP {ip} successfully added to blacklist",
-        "blacklisted_ip": ip,
-        "total_blacklisted": len(custom_blacklisted_ips)
     }
 
 # --- PF Sense Integration Endpoints (SQLAlchemy Core) ---

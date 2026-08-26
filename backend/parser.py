@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, Union
-from log_parser import LogParser as MultiFormatParser
+from .log_parser import LogParser as MultiFormatParser
 from .schemas import LogCreate
 
 class LogParser:
