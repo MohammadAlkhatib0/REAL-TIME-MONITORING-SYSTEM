@@ -19,6 +19,7 @@ from .threat_engine import threat_engine
 from .websocket_manager import manager
 from .threat_scorer import ThreatScorer
 from .threat_detector import DEFAULT_BLACKLISTED_IPS
+from .geoip_helper import get_geoip_data
 
 app = FastAPI(
     title="Real-Time Network Monitoring & Threat Detection API (SQLAlchemy Core)",
@@ -140,6 +141,8 @@ async def ingest_log(raw_log: Union[Dict[str, Any], str], conn: Connection = Dep
     if log_data.source_ip in custom_blacklisted_ips:
         log_data.action = "BLOCK"
 
+    geoip = get_geoip_data(log_data.source_ip)
+
     # 2. Insert log into database using SQLAlchemy Core insert()
     insert_log_stmt = insert(logs_table).values(
         timestamp=log_data.timestamp,
@@ -152,6 +155,8 @@ async def ingest_log(raw_log: Union[Dict[str, Any], str], conn: Connection = Dep
         bytes_transferred=log_data.bytes_transferred,
         event_type=log_data.action.lower(),
         severity=log_data.severity if hasattr(log_data, 'severity') else "LOW",
+        country_code=geoip["country_code"],
+        country_name=geoip["country_name"],
         message=log_data.message
     ).returning(logs_table.c.id)
     
@@ -178,6 +183,8 @@ async def ingest_log(raw_log: Union[Dict[str, Any], str], conn: Connection = Dep
             threat_score=score,
             severity=alert_data.severity,
             source_ip=alert_data.source_ip,
+            country_code=geoip["country_code"],
+            country_name=geoip["country_name"],
             description=alert_data.description,
             status="ACTIVE"
         ).returning(threat_alerts_table.c.id)
@@ -819,6 +826,22 @@ def get_summary_stats(conn: Connection = Depends(get_db)):
         "active_alerts": active_alerts,
         "protocol_breakdown": proto_dict,
         "action_breakdown": action_dict
+    }
+
+# POST /api/simulate/attack
+from .enterprise_simulator import enterprise_simulator
+
+@app.post("/api/simulate/attack")
+def simulate_enterprise_attack(payload: Dict[str, Any]):
+    scenario = payload.get("scenario", "L7_DDOS")
+    count = int(payload.get("count", 5))
+    
+    injected = enterprise_simulator.inject_log_batch(count=count)
+    return {
+        "status": "success",
+        "scenario": scenario,
+        "logs_injected": injected,
+        "message": f"Successfully injected {injected} high-volume enterprise attack logs into real-time threat engine"
     }
 
 # --- WebSocket Endpoints (SQLAlchemy Core) ---

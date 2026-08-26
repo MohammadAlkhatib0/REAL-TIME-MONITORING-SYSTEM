@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Play, Pause, LayoutDashboard, Lock } from 'lucide-react';
+import { Shield, Play, Pause, LayoutDashboard, Lock, Globe, FileText } from 'lucide-react';
 
 export function Header({ isConnected, isPaused, togglePause, activeTab, setActiveTab }) {
   return (
@@ -15,11 +15,11 @@ export function Header({ isConnected, isPaused, togglePause, activeTab, setActiv
       </div>
 
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', background: '#0f172a', padding: '0.3rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
+      <div style={{ display: 'flex', gap: '0.3rem', background: '#0f172a', padding: '0.3rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
         <button
           onClick={() => setActiveTab('dashboard')}
           style={{
-            padding: '0.5rem 1rem',
+            padding: '0.45rem 0.8rem',
             borderRadius: '6px',
             border: 'none',
             background: activeTab === 'dashboard' ? '#3b82f6' : 'transparent',
@@ -32,13 +32,32 @@ export function Header({ isConnected, isPaused, togglePause, activeTab, setActiv
             fontSize: '0.85rem'
           }}
         >
-          <LayoutDashboard size={16} /> Live Dashboard
+          <LayoutDashboard size={15} /> Dashboard
+        </button>
+
+        <button
+          onClick={() => setActiveTab('geo-map')}
+          style={{
+            padding: '0.45rem 0.8rem',
+            borderRadius: '6px',
+            border: 'none',
+            background: activeTab === 'geo-map' ? '#0284c7' : 'transparent',
+            color: activeTab === 'geo-map' ? '#ffffff' : '#94a3b8',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontSize: '0.85rem'
+          }}
+        >
+          <Globe size={15} /> Geo-Threats & Simulator
         </button>
 
         <button
           onClick={() => setActiveTab('ip-intelligence')}
           style={{
-            padding: '0.5rem 1rem',
+            padding: '0.45rem 0.8rem',
             borderRadius: '6px',
             border: 'none',
             background: activeTab === 'ip-intelligence' ? '#ef4444' : 'transparent',
@@ -51,7 +70,26 @@ export function Header({ isConnected, isPaused, togglePause, activeTab, setActiv
             fontSize: '0.85rem'
           }}
         >
-          <Lock size={16} /> IP Intelligence & Blacklist
+          <Lock size={15} /> IP Blacklist
+        </button>
+
+        <button
+          onClick={() => setActiveTab('playbooks')}
+          style={{
+            padding: '0.45rem 0.8rem',
+            borderRadius: '6px',
+            border: 'none',
+            background: activeTab === 'playbooks' ? '#a855f7' : 'transparent',
+            color: activeTab === 'playbooks' ? '#ffffff' : '#94a3b8',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontSize: '0.85rem'
+          }}
+        >
+          <FileText size={15} /> SOC Playbooks & Audit
         </button>
       </div>
 

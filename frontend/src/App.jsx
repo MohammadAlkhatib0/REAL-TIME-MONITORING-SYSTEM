@@ -6,6 +6,8 @@ import { AlertFeed } from './components/AlertFeed';
 import { LogTable } from './components/LogTable';
 import { Charts } from './components/Charts';
 import { IPIntelligence } from './components/IPIntelligence';
+import { GeoThreatMap } from './components/GeoThreatMap';
+import { IncidentPlaybooks } from './components/IncidentPlaybooks';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,7 +34,7 @@ export default function App() {
         setActiveTab={setActiveTab}
       />
 
-      {activeTab === 'dashboard' ? (
+      {activeTab === 'dashboard' && (
         <>
           <MetricsCards metrics={metrics} totalLogs={logs.length} />
           <Charts metricsHistory={metricsHistory} logs={logs} />
@@ -41,9 +43,11 @@ export default function App() {
             <AlertFeed alerts={alerts} acknowledgeAlert={acknowledgeAlert} />
           </div>
         </>
-      ) : (
-        <IPIntelligence />
       )}
+
+      {activeTab === 'geo-map' && <GeoThreatMap />}
+      {activeTab === 'ip-intelligence' && <IPIntelligence />}
+      {activeTab === 'playbooks' && <IncidentPlaybooks />}
     </div>
   );
 }
